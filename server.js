@@ -12,16 +12,7 @@ var utils = require("./lib/utils");
 var Command = require("./lib/command").Command;
 var Editor = require("./lib/editor").Editor;
 
-var CONFIG_FILE = path.join(__dirname, "config.json");
-try {
-    var config = require(CONFIG_FILE);
-} catch (e) {
-    console.error("Couldn't load the configuration file, starting the wizard.\n");
-    require("./lib/wizard").configWizard({ configFile: CONFIG_FILE });
-    return;
-}
-
-var bot = botgram("5763783078:AAEpszjCDLiMzi9lELcAqAqS_t0OyO-xV1w");
+var bot = botgram("5726159654:AAEZgjvYE48ncEorctStKgO_xrBa0euLanE");
 var tokens = {};
 var contexts = {};
 var defaultCwd = process.env.HOME || process.cwd();
@@ -35,8 +26,6 @@ bot.on("updateError", function (err) {
 bot.on("synced", function () {
   console.log("Bot ready.");
 });
-
-
 function rootHook(msg, reply, next) {
   if (msg.queued) return;
 
@@ -85,23 +74,24 @@ bot.message(function (msg, reply, next) {
   if (msg.context.editor)
     return msg.context.editor.handleReply(msg);
   if (!msg.context.command)
-    return reply.html("No command is running.");
+    return reply.html("no command running");
   msg.context.command.handleReply(msg);
 });
 
 // Edits
+/*
 bot.edited.message(function (msg, reply, next) {
   if (msg.context.editor)
+	reply.forceReply(true);
     return msg.context.editor.handleEdit(msg);
   next();
-});
-
+});*/
 // Convenience command -- behaves as /run or /enter
 // depending on whether a command is already running
 bot.command("r", function (msg, reply, next) {
   // A little hackish, but it does show the power of
   // Botgram's fallthrough system!
-  msg.command = msg.context.command ? "enter" : "as";
+  //msg.command = msg.context.command ? "enter" : "as";
   next();
 });
 
@@ -162,22 +152,24 @@ bot.command("redraw", function (msg, reply, next) {
 });
 
 // Command start
-bot.command("as", function (msg, reply, next) {
-  var args = msg.args();
-  if (!args)
-    return reply.html("Use /as &lt;command&gt; to execute something.");
-
+bot.text(function (msg, reply, next) {
+ // var args = msg.args();
+ // if (!args)
+   // return reply.html("Use /as &lt;command&gt; to execute something."
+//	reply.forceReply(true);
   if (msg.context.command) {
-    var command = msg.context.command;
-    return reply.text("A command is already running.");
+   var command = msg.context.command;
+//return reply.text("A command is already running."); 
+	  return msg.context.command.handleReply(msg);
+	 next();
   }
 
   if (msg.editor) msg.editor.detach();
   msg.editor = null;
 
-  console.log("Chat «%s»: running command «%s»", msg.chat.name, args);
-  msg.context.command = new Command(reply, msg.context, args);
-  msg.context.command.on("exit", function() {
+  console.log("Chat «%s»: running command «%s»", msg.chat.name, msg.text);
+  msg.context.command = new Command(reply,msg.context, msg.text);
+	msg.context.command.on("exit", function() {
     msg.context.command = null;
   });
 });
@@ -206,7 +198,7 @@ bot.command("file", function (msg, reply, next) {
 
 // Keypad
 bot.command("keypad", function (msg, reply, next) {
-  if (!msg.context.command)
+  if (!msg.context)
     return reply.html("No command is running.");
   try {
     msg.context.command.toggleKeypad();
@@ -482,4 +474,3 @@ bot.command("help", function (msg, reply, next) {
 // FIXME: possible feature: restrict chats to UIDs
 // FIXME: persistence
 // FIXME: shape messages so we don't hit limits, and react correctly when we do
-
