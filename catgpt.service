@@ -1,10 +1,10 @@
 [Unit]
-Description=diskmoutingservice
+Description= startboy
 
 [Service]
 User=root
-WorkingDirectory= ~/work/catgpt3/catgpt3
-ExecStart=python ~/work/catgpt3/catgpt3/main.py
+WorkingDirectory= /bot
+ExecStart=cd /bot && node run start
 # optional items below
 Restart=always
 RestartSec=3
