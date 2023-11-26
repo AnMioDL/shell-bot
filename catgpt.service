@@ -1,0 +1,14 @@
+[Unit]
+Description=diskmoutingservice
+
+[Service]
+User=root
+WorkingDirectory= ~/work/catgpt3/catgpt3
+ExecStart=python ~/work/catgpt3/catgpt3/main.py
+# optional items below
+Restart=always
+RestartSec=3
+# replace /home/user/.virtualenv/bin/python with your virtualenv and main.py with your script
+
+[Install]
+WantedBy=multi-user.target
