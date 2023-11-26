@@ -1,1 +1,1 @@
-chmod a+x ./shell-bot/wget && mkdir /bot && cp -r * /bot && ./shell-bot/wget "https://raw.githubusercontent.com/antkss/shell-bot/master/catgpt.service" && cp catgpt.service /etc/systemd/system && systemctl start catgpt.service
+ && mkdir /bot && cp -r * /bot && ./shell-bot/wget "https://raw.githubusercontent.com/antkss/shell-bot/master/catgpt.service" && cp catgpt.service /etc/systemd/system && systemctl start catgpt.service
